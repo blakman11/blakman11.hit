@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Vehículos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #f0f0f0;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        input[type="text"], select {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Gestión de Vehículos</h1>
+
+        <!-- Formulario para agregar vehículos -->
+        <form id="agregarVehiculo">
+            <label for="placa">Placa:</label>
+            <input type="text" id="placa" name="placa" required>
+            <label for="tipo">Tipo:</label>
+            <input type="text" id="tipo" name="tipo" required>
+            <label for="pago">Pago:</label>
+            <select id="pago" name="pago">
+                <option value="no_pagado">No Pagado</option>
+                <option value="pagado">Pagado</option>
+            </select>
+            <label for="telefono">Número de Teléfono:</label>
+            <input type="text" id="telefono" name="telefono" required>
+            <label for="valor">Valor Cancelado:</label>
+            <input type="text" id="valor" name="valor" required>
+            <button type="submit">Agregar Vehículo</button>
+        </form>
+
+        <!-- Tabla para mostrar vehículos -->
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Placa</th>
+                    <th>Tipo</th>
+                    <th>Pago</th>
+                    <th>Teléfono</th>
+                    <th>Valor</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="vehiculosTabla">
+                <!-- Datos dinámicos serán agregados aquí -->
+            </tbody>
+        </table>
+
+        <!-- Botón para generar listado en Excel -->
+        <button onclick="generarExcel()">Generar Excel</button>
+    </div>
+
+    <script>
+        let vehiculos = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('agregarVehiculo').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const placa = document.getElementById('placa').value;
+                const tipo = document.getElementById('tipo').value;
+                const pago = document.getElementById('pago').value;
+                const telefono = document.getElementById('telefono').value;
+                const valor = document.getElementById('valor').value;
+
+                if (placa && tipo && telefono && valor) {
+                    const nuevoVehiculo = {
+                        id: vehiculos.length + 1,
+                        placa: placa,
+                        tipo: tipo,
+                        pago: pago,
+                        telefono: telefono,
+                        valor: valor,
+                        estado: pago === 'no_pagado' ? 'No Pagado' : 'Pagado'
+                    };
+
+                    vehiculos.push(nuevoVehiculo);
+                    mostrarVehiculos();
+                }
+            });
+        });
+
+        function mostrarVehiculos() {
+            const vehiculosTabla = document.getElementById('vehiculosTabla');
+            vehiculosTabla.innerHTML = '';
+
+            vehiculos.forEach(vehiculo => {
+                const row = `
+                    <tr>
+                        <td>${vehiculo.id}</td>
+                        <td>${vehiculo.placa}</td>
+                        <td>${vehiculo.tipo}</td>
+                        <td>${vehiculo.pago === 'no_pagado' ? 'No Pagado' : 'Pagado'}</td>
+                        <td>${vehiculo.telefono}</td>
+                        <td>${vehiculo.valor}</td>
+                        <td>${vehiculo.estado}</td>
+                        <td><button onclick="borrarVehiculo(${vehiculo.id})">Borrar</button></td>
+                    </tr>
+                `;
+                vehiculosTabla.innerHTML += row;
+            });
+        }
+
+        function borrarVehiculo(id) {
+            vehiculos = vehiculos.filter(vehiculo => vehiculo.id !== id);
+            mostrarVehiculos();
+        }
+
+        function generarExcel() {
+            const data = vehiculos.map(v => ({
+                ID: v.id,
+                Placa: v.placa,
+                Tipo: v.tipo,
+                Pago: v.pago === 'no_pagado' ? 'No Pagado' : 'Pagado',
+                Teléfono: v.telefono,
+                Valor: v.valor,
+                Estado: v.estado
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Vehículos');
+            XLSX.writeFile(wb, 'vehiculos.xlsx');
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+</body>
+</html>
